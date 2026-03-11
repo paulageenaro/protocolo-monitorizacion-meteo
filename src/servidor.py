@@ -5,20 +5,19 @@ import time
 import requests
 
 class MeteoServer:
-    def __init__(self, host='0.0.0.0', port=5000):
+    def __init__(self, host='127.0.0.1', port=5000): # Cambiado a 0.0.0.0 para acceso externo
         self.host = host
         self.port = port
-        # REEMPLAZA ESTO CON TU API KEY REAL
         self.api_key = "be0c11c0a23c59c181513ee2570c9cd0" 
         
-        # Diccionario para guardar el último estado conocido de cada ciudad
+        # --- LISTA DE CIUDADES DISPONIBLES ---
+        self.ciudades_soportadas = ["Madrid", "Granada", "Barcelona", "Sevilla", "Matalascañas", "Londres", "Paris", "Malaga", "Valencia", "Bilbao"]
+        
         self.city_states = {} 
-        # Diccionario de suscripciones: { socket: {"city": "Granada", "vars": [...], "last_sent": {...}} }
         self.subscriptions = {}
         self.lock = threading.Lock()
 
     def fetch_weather(self, city):
-        """Consulta la API de OpenWeather para una ciudad concreta."""
         url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={self.api_key}&units=metric"
         try:
             resp = requests.get(url, timeout=5)
@@ -31,14 +30,12 @@ class MeteoServer:
                     "wind": data['wind']['speed']
                 }
             else:
-                print(f"[API ERROR] Ciudad '{city}' no encontrada o API Key inválida.")
                 return None
         except Exception as e:
             print(f"[RED ERROR] Error al conectar con la API: {e}")
             return None
 
     def update_loop(self):
-        """Hilo que actualiza periódicamente las ciudades con suscriptores."""
         while True:
             with self.lock:
                 cities_to_update = {sub["city"] for sub in self.subscriptions.values()}
@@ -51,16 +48,14 @@ class MeteoServer:
                         self.city_states[city] = new_data
                         self.process_notifications(city, old_data)
             
-            time.sleep(60) # Actualización cada minuto
+            time.sleep(60)
 
     def process_notifications(self, city, old_data):
-        """Envía notificaciones si los datos de la ciudad cambiaron."""
         current_data = self.city_states[city]
         for sock, sub in list(self.subscriptions.items()):
             if sub["city"] == city:
                 changes = {}
                 for v in sub["vars"]:
-                    # Si el valor actual es distinto al último que le enviamos a este cliente
                     if current_data.get(v) != sub["last_sent"].get(v):
                         changes[v] = current_data[v]
                 
@@ -78,7 +73,6 @@ class MeteoServer:
     def remove_client(self, sock):
         with self.lock:
             if sock in self.subscriptions:
-                print(f"[LOG] Cliente {sock.getpeername()} desconectado.")
                 del self.subscriptions[sock]
             try:
                 sock.close()
@@ -92,14 +86,23 @@ class MeteoServer:
                 data = conn.recv(1024).decode('utf-8')
                 if not data: break
                 
-                # Gestión de múltiples mensajes en un mismo buffer
                 messages = data.strip().split('\n')
                 for m in messages:
                     req = json.loads(m)
                     cmd = req.get("command")
                     city = req.get("city", "Madrid")
 
-                    if cmd == "GET":
+                    # --- NUEVO COMANDO: LIST ---
+                    if cmd == "LIST":
+                        print(f"[LIST] {addr} solicita catálogo")
+                        self.send_json(conn, {
+                            "status": 200, 
+                            "type": "RESP_LIST", 
+                            "data": self.ciudades_soportadas,
+                            "msg": f"Actualmente tengo {len(self.ciudades_soportadas)} ciudades disponibles."
+                        })
+
+                    elif cmd == "GET":
                         print(f"[GET] {addr} pide {city}")
                         fresh_data = self.fetch_weather(city)
                         if fresh_data:
@@ -109,9 +112,19 @@ class MeteoServer:
 
                     elif cmd == "SUB":
                         vars_req = req.get("variables", ["temp", "hum", "pres", "wind"])
-                        print(f"[SUB] {addr} se suscribe a {city}")
                         
-                        # Al suscribirse, enviamos datos actuales de esa ciudad inmediatamente
+                        # --- COMPROBACIÓN DE SUSCRIPCIÓN PREVIA ---
+                        with self.lock:
+                            if conn in self.subscriptions:
+                                ciudad_actual = self.subscriptions[conn]["city"]
+                                self.send_json(conn, {
+                                    "status": 400, 
+                                    "msg": f"Ya estás suscrito a las alertas de {ciudad_actual}. ✅"
+                                })
+                                continue # Saltamos al siguiente mensaje sin hacer nada más
+                        
+                        # Si no estaba suscrito, procedemos normalmente
+                        print(f"[SUB] {addr} se suscribe a {city}")
                         initial_data = self.fetch_weather(city)
                         if initial_data:
                             with self.lock:
@@ -123,8 +136,7 @@ class MeteoServer:
                                 }
                             self.send_json(conn, {"status": 200, "msg": f"Suscrito a {city}", "current": initial_data})
                         else:
-                            self.send_json(conn, {"status": 404, "msg": "Ciudad no válida"})
-
+                            self.send_json(conn, {"status": 404, "msg": "Ciudad no válida"})    
                     elif cmd == "UNSUB":
                         with self.lock:
                             if conn in self.subscriptions:
@@ -150,5 +162,4 @@ class MeteoServer:
             threading.Thread(target=self.handle_client, args=(conn, addr), daemon=True).start()
 
 if __name__ == "__main__":
-
     MeteoServer().start()
