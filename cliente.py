@@ -28,7 +28,7 @@ def listen_from_server(sock):
 def start_client():
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        client.connect(('127.0.0.1', 5000))
+        client.connect(('IP_DEL_SERVIDOR', 5000))
     except:
         print("Servidor no encontrado.")
         return
@@ -73,4 +73,5 @@ def start_client():
     client.close()
 
 if __name__ == "__main__":
+
     start_client()
