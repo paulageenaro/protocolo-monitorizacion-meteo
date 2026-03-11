@@ -5,7 +5,7 @@ import time
 import requests
 
 class MeteoServer:
-    def __init__(self, host='127.0.0.1', port=5000):
+    def __init__(self, host='0.0.0.0', port=5000):
         self.host = host
         self.port = port
         # REEMPLAZA ESTO CON TU API KEY REAL
@@ -150,4 +150,5 @@ class MeteoServer:
             threading.Thread(target=self.handle_client, args=(conn, addr), daemon=True).start()
 
 if __name__ == "__main__":
+
     MeteoServer().start()
