@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeteoApp | Asistente Inteligente</title>
+    <!-- Fuentes Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-animation"></div>
+    
+    <main class="glass-container">
+        <!-- CABECERA -->
+        <header>
+            <div class="logo-box">
+                <span class="icon">☁️</span>
+                <h1>MeteoApp <span>PRO</span></h1>
+            </div>
+            <div class="connection-status" id="connStatus">Desconectado</div>
+        </header>
+
+        <div class="app-layout">
+            <!-- SIDEBAR DE SUSCRIPCIONES (NUEVO) -->
+            <aside class="sidebar hidden" id="subscriptionsSidebar">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
+                   <h3>🔔 Suscripciones Activas</h3>
+                   <button id="btnDisconnect" class="btn-action btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; height: fit-content;" title="Desconectar del servidor">✖ Salir</button>
+                </div>
+                <ul class="sub-list" id="subList">
+                    <!-- Las ciudades se insertarán aquí dinámicamente -->
+                </ul>
+            </aside>
+
+            <!-- CONTENIDO PRINCIPAL -->
+            <div class="main-content">
+                <!-- CONFIGURACIÓN DE RED -->
+                <section class="network-setup" id="networkSetup">
+                    <h3>Conexión al Proxy WebSocket</h3>
+                    <div class="input-group network-inputs">
+                        <input type="text" id="wsHost" value="localhost" placeholder="IP del Proxy (localhost)">
+                        <input type="number" id="wsPort" value="8080" placeholder="Puerto (8080)">
+                        <button id="btnConnect" class="btn-primary" style="width: 100%;">Conectar</button>
+                    </div>
+                </section>
+
+        <!-- PANEL DE CONTROL PRINCIPAL -->
+        <section class="control-panel hidden" id="controlPanel">
+            <!-- Selector de Ciudad -->
+            <div class="card city-selector">
+                <h2>¿Qué ciudad consultamos?</h2>
+                <div class="search-box">
+                    <input type="text" id="cityInput" placeholder="Ej. Madrid, Granada, Londres..." autocomplete="off">
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="btnGet" class="btn-action">
+                        <span class="btn-icon">🔍</span>
+                        Consulta Puntual
+                    </button>
+                    <button id="btnSub" class="btn-action btn-highlight">
+                        <span class="btn-icon">🔔</span>
+                        Suscribirse a Alertas
+                    </button>
+                    <button id="btnUnsub" class="btn-action btn-danger">
+                        <span class="btn-icon">🔕</span>
+                        Cancelar Alertas
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel de Resultados / Visualización de Datos -->
+            <div class="card data-view">
+                <div class="view-header">
+                    <h2>Datos en Vivo</h2>
+                    <span class="pulse-indicator hidden" id="liveIndicator"></span>
+                </div>
+                
+                <!-- Tarjeta del Clima (Oculta por defecto) -->
+                <div class="weather-display hidden" id="weatherDisplay">
+                    <h1 class="city-title" id="displayCity">Ciudad</h1>
+                    
+                    <div class="weather-grid">
+                        <div class="weather-item tooltip" data-tip="Temperatura">
+                            <span class="w-icon">🌡️</span>
+                            <span class="w-value" id="valTemp">--</span><span class="w-unit">°C</span>
+                        </div>
+                        <div class="weather-item tooltip" data-tip="Humedad">
+                            <span class="w-icon">💧</span>
+                            <span class="w-value" id="valHum">--</span><span class="w-unit">%</span>
+                        </div>
+                        <div class="weather-item tooltip" data-tip="Viento">
+                            <span class="w-icon">💨</span>
+                            <span class="w-value" id="valWind">--</span><span class="w-unit">m/s</span>
+                        </div>
+                        <div class="weather-item tooltip" data-tip="Presión">
+                            <span class="w-icon">⏱️</span>
+                            <span class="w-value" id="valPres">--</span><span class="w-unit">hPa</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Consola / Log de Sistema -->
+                <div class="system-log" id="systemLog">
+                    <div class="log-entry system">Inicia conexión para ver los datos aquí...</div>
+                </div>
+            </div>
+        </section>
+        </div><!-- Fin app-layout -->
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
