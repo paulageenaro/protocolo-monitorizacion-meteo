@@ -38,7 +38,9 @@ class MeteoServer:
     def update_loop(self):
         while True:
             with self.lock:
-                cities_to_update = {sub["city"] for sub in self.subscriptions.values()}
+                cities_to_update = set()
+                for subs in self.subscriptions.values():
+                    cities_to_update.update(subs.keys())
             
             for city in cities_to_update:
                 new_data = self.fetch_weather(city)
@@ -52,8 +54,9 @@ class MeteoServer:
 
     def process_notifications(self, city, old_data):
         current_data = self.city_states[city]
-        for sock, sub in list(self.subscriptions.items()):
-            if sub["city"] == city:
+        for sock, subs in list(self.subscriptions.items()):
+            if city in subs:
+                sub = subs[city]
                 changes = {}
                 for v in sub["vars"]:
                     if current_data.get(v) != sub["last_sent"].get(v):
@@ -115,11 +118,13 @@ class MeteoServer:
                         
                         # --- COMPROBACIÓN DE SUSCRIPCIÓN PREVIA ---
                         with self.lock:
-                            if conn in self.subscriptions:
-                                ciudad_actual = self.subscriptions[conn]["city"]
+                            if conn not in self.subscriptions:
+                                self.subscriptions[conn] = {}
+                                
+                            if city in self.subscriptions[conn]:
                                 self.send_json(conn, {
                                     "status": 400, 
-                                    "msg": f"Ya estás suscrito a las alertas de {ciudad_actual}. ✅"
+                                    "msg": f"Ya estás suscrito a las alertas de {city}. ✅"
                                 })
                                 continue # Saltamos al siguiente mensaje sin hacer nada más
                         
@@ -129,8 +134,7 @@ class MeteoServer:
                         if initial_data:
                             with self.lock:
                                 self.city_states[city] = initial_data
-                                self.subscriptions[conn] = {
-                                    "city": city, 
+                                self.subscriptions[conn][city] = {
                                     "vars": vars_req, 
                                     "last_sent": initial_data.copy()
                                 }
@@ -139,9 +143,14 @@ class MeteoServer:
                             self.send_json(conn, {"status": 404, "msg": "Ciudad no válida"})    
                     elif cmd == "UNSUB":
                         with self.lock:
+                            target_city = req.get("city")
                             if conn in self.subscriptions:
-                                del self.subscriptions[conn]
-                                self.send_json(conn, {"status": 200, "msg": "Suscripción cancelada"})
+                                if target_city and target_city in self.subscriptions[conn]:
+                                    del self.subscriptions[conn][target_city]
+                                    self.send_json(conn, {"status": 200, "msg": f"Suscripción a {target_city} cancelada"})
+                                else:
+                                    del self.subscriptions[conn]
+                                    self.send_json(conn, {"status": 200, "msg": "Todas las suscripciones canceladas"})
 
         except Exception as e:
             print(f"[CLIENT ERROR] {e}")
