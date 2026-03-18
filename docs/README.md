@@ -114,7 +114,7 @@ Además, el proxy puede generar un error `500` si no logra conectar con el servi
 ---
 
 ## 5. Especificación formal del protocolo en ABNF
-
+Existe un pdf adjunto en el repositorio donde poder ver esto más desarrollado.
 A continuación se define formalmente el formato de los mensajes del protocolo mediante **ABNF**.
 
 > **Nota**: aunque JSON no obliga a un orden fijo de los campos, en esta especificación se muestra un orden canónico recomendado para facilitar la interoperabilidad.
@@ -803,7 +803,7 @@ El protocolo definido permite implementar un sistema de monitorización meteorol
 La especificación formal en ABNF detalla la estructura de los mensajes, los campos obligatorios y opcionales, los tipos de datos admitidos y las principales restricciones sintácticas y semánticas del protocolo. De este modo, un tercero puede implementar un cliente compatible sin necesidad de consultar el código fuente original.
 
 ## 14. Diagramas de estados
-
+Existe un pdf adjunto en el repositorio donde poder ver esto más desarrollado.
 ### 14.1. Diagrama de estados del cliente
 
 > En este sistema, el cliente lógico es la aplicación web que se comunica con el servidor a través del proxy WebSocket. El diagrama refleja los estados desde el punto de vista del cliente de aplicación.
