@@ -1,0 +1,140 @@
+📡 Análisis de trazas de red (cliente-servidor)
+🧠 Contexto
+
+Se ha capturado tráfico en la máquina servidor (172.20.10.6) mientras múltiples clientes se conectan y realizan peticiones.
+El análisis muestra comunicaciones TCP internas y conexiones HTTP externas.
+
+🖥️ Identificación de roles
+
+Servidor principal: 172.20.10.6 (puerto 5000)
+
+Cliente principal: 172.20.10.7
+
+Gateway / DNS: 172.20.10.1
+
+Servidor externo: 141.95.47.140 (API OpenWeather)
+
+🔌 Conexiones cliente-servidor (internas)
+📍 Ejemplo de conexión
+172.20.10.7:58524 → 172.20.10.6:5000
+🔁 Handshake TCP
+[SYN]     Cliente → Servidor
+[SYN,ACK] Servidor → Cliente
+[ACK]     Cliente → Servidor
+
+👉 Esto indica inicio correcto de conexión.
+
+👥 Múltiples clientes (puertos efímeros)
+
+Se observan varias conexiones simultáneas desde el cliente:
+
+58524 → 5000
+
+55654 → 5000
+
+58474 → 5000
+
+58584 → 5000
+
+👉 Cada puerto representa:
+
+Una conexión distinta
+
+Posiblemente múltiples clientes o múltiples peticiones concurrentes
+
+📡 Comunicación de datos
+
+Después del handshake:
+
+[PSH, ACK] → envío de datos
+
+Ejemplo:
+
+172.20.10.7 → 172.20.10.6
+
+👉 El cliente envía peticiones al servidor (probablemente HTTP o protocolo propio).
+
+🌐 Resolución DNS
+
+Antes de acceder al servidor externo:
+
+api.openweathermap.org
+
+Se observa:
+
+Consulta DNS → respuesta con CNAME y A
+api.openweathermap.org → eu-api.openweathermap.org → 141.95.47.140
+
+👉 Importante:
+
+Se usa CNAME (alias)
+
+Resolución final a IP pública
+
+🌍 Conexiones externas HTTP
+📍 Conexión detectada
+172.20.10.7:52306 → 141.95.47.140:80
+🔁 Handshake
+SYN → SYN-ACK → ACK
+📤 Petición HTTP
+GET /data/2.5/weather?q=Granada&appid=...&units=metric
+
+👉 El cliente consulta la API del tiempo.
+
+📥 Respuesta del servidor
+HTTP/1.1 200 OK (application/json)
+
+👉 Respuesta correcta con datos meteorológicos.
+
+🔚 Cierre de conexiones
+
+Se observan cierres normales:
+
+FIN, ACK
+ACK
+
+👉 No hay errores (no se ven RST).
+
+🔄 Patrón repetitivo observado
+
+El flujo completo se repite varias veces:
+
+Cliente → servidor local (puerto 5000)
+
+Resolución DNS
+
+Conexión a API externa
+
+Petición HTTP
+
+Respuesta JSON
+
+Cierre conexión
+
+👉 Esto indica:
+
+Varias peticiones del cliente
+
+Posiblemente múltiples usuarios o refrescos
+
+⚠️ Observaciones relevantes
+
+✔ Uso correcto de TCP (handshake + cierre limpio)
+
+✔ Uso de puertos efímeros para múltiples conexiones
+
+✔ Resolución DNS repetida (podría optimizarse con caché)
+
+✔ Comunicación HTTP en puerto 80 (no cifrada)
+
+🧾 Conclusión
+
+El sistema funciona correctamente siguiendo este flujo:
+
+Cliente → Servidor local → DNS → API externa → Respuesta → Cliente
+
+Se gestionan múltiples conexiones simultáneamente
+
+No se detectan errores de red
+
+El servidor actúa como intermediario hacia una API externa
