@@ -1,8 +1,8 @@
-import asyncio
-import websockets
-import socket
-import json
-import threading
+import asyncio # Gestiona tareas que pueden "esperar" sin bloquear el programa. Es la base de WebSockets para manejar muchos clientes web a la vez.
+import websockets # Es la librería específica para crear el servidor al que se conectará el navegador.
+import socket # Para la comunicación por red (TCP)
+import json # Para enviar y recibir datos en formato JSON
+import threading # Para manejar múltiples clientes a la vez y procesos en segundo plano
 
 # Configuración
 WS_HOST = '0.0.0.0'
