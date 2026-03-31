@@ -1,24 +1,24 @@
 # Protocolo de Monitorización Meteorológica ☁️
 
-> **🛑 NOTA IMPORTANTE PARA DEFENSA Y DEMO:**
-> El **núcleo oficial evaluable** del proyecto corresponde exclusivamente a la comunicación directa TCP entre `cliente.py` y `servidor.py`. 
-> El uso del proxy (`proxy.py`) y la interfaz web (`web/index.html`) se presentan únicamente como una **ampliación opcional** para mejorar la visualización y demostrar la escalabilidad del protocolo.
+# Protocolo de Monitorización Meteorológica ☁️
 
-Este proyecto implementa un protocolo de aplicación meteorológico de arquitectura distribuida, diseñado para **entornos aislados (Máquinas Virtuales)**. **El escenario asignado requería TCP**, por lo que su infraestructura principal consta de un motor base cliente-servidor estandarizado en este protocolo, asegurando un canal persistente y ordenado. De manera adicional, ha sido extendido con una capa web.
+Este proyecto implementa un protocolo de aplicación meteorológico de arquitectura distribuida, diseñado para **entornos aislados (Máquinas Virtuales)**. Dado que **el escenario asignado requería TCP**, hemos diseñado nuestra infraestructura principal apoyándonos en un motor base cliente-servidor puramente TCP. Esto nos asegura un canal de comunicación persistente y ordenado para todo el sistema. De manera adicional, para mejorar la experiencia, hemos incorporado una extensión gráfica interactiva vía web.
 
 ---
 
 ## 🏗️ Arquitectura del Sistema
 
-El sistema se clasifica en dos categorías principales:
+Hemos clasificado nuestra arquitectura en dos grandes bloques:
 
-### 1. Núcleo Evaluable (Ámbito Oficial)
-1. **`servidor.py` (Backend Meteorológico)**: Obtiene datos del clima en vivo usando OpenWeatherMap. Trabaja en el puerto TCP `5000`. Procesa peticiones y envía notificaciones automáticas ante variaciones climáticas en ciudades suscritas.
-2. **`cliente.py` (Cliente Consola)**: Herramienta oficial para interactuar con el servidor mediante el protocolo JSON nativo por TCP. Presenta una interfaz de terminal pura.
+### 1. Sistema Principal (TCP Base)
+Es la implementación fundamental que sostiene el flujo exigido:
+1. **`servidor.py` (Backend Meteorológico)**: El motor que obtiene datos del clima en vivo conectándose a OpenWeatherMap. Escucha en el puerto TCP `5000`, procesa consultas y distribuye de vuelta notificaciones a cada cliente suscrito.
+2. **`cliente.py` (Consola de Usuario)**: Nuestra herramienta de terminal desde donde podemos enviar los JSONs crudos por TCP e interactuar de lleno con nuestro protocolo en local.
 
-### 2. Ampliación Opcional (Interfaz Gráfica)
-3. **`proxy.py` (Puente Web-TCP)**: Actúa como pasarela intermedia bidireccional entre la app web y el servidor Python. Escucha peticiones WebSocket en el puerto `8080`.
-4. **`web/index.html` (MeteoApp PRO)**: El frontend web de acceso alternativo para usuarios.
+### 2. Extensión Web (Interfaz Alternativa)
+Para aportar un extra de accesibilidad y valor gráfico, añadimos esta capa que dialoga con el sistema principal:
+3. **`proxy.py` (Puente de Comunicación)**: Un pequeño hilo conductor bidireccional que enlaza las conexiones WebSocket provenientes del navegador y las traduce en paquetes limpios hacia nuestro servidor originario TCP. Se despliega en el puerto `8080`.
+4. **`web/index.html` (MeteoApp PRO)**: Panel de visualización con HTML puro (Glassmorphism design) para manipular fácilmente el sistema.
 
 # Protocolo de Monitorización Meteorológica con Suscripción y Notificaciones
 
@@ -31,14 +31,14 @@ Este proyecto implementa un **protocolo de aplicación meteorológico** que perm
 - **suscribirse** a cambios en variables meteorológicas,
 - y **cancelar suscripciones** previamente realizadas.
 
-El núcleo del sistema evaluable está compuesto por dos elementos:
+El **sistema principal** de este proyecto está compuesto por dos elementos:
 
-- **Cliente de consola (`cliente.py`)**: ejecuta consultas y maneja la comunicación de forma directa por la terminal.
-- **Servidor meteorológico (`servidor.py`)**: procesa peticiones, consulta la API externa de OpenWeather y envía respuestas o notificaciones.
+- **Cliente de consola (`cliente.py`)**: nuestra interfaz de terminal para dictar consultas y leer las notificaciones.
+- **Servidor meteorológico (`servidor.py`)**: nuestra pieza central que procesa peticiones e interroga constantemente a la API externa de OpenWeather.
 
-Para la **ampliación opcional web**, existe un flujo alternativo que añade:
-- **Cliente web**: interfaz visual (HTML/JS) desde la que el usuario despliega las acciones.
-- **Proxy WebSocket (`proxy.py`)**: recibe mensajes del cliente web y los reenvía por TCP estándar al servidor.
+Como **extensión web** para mejorar el uso y visualizar los datos de forma moderna, sumamos además:
+- **Cliente web**: una interfaz visual (HTML/JS) cómoda en el navegador.
+- **Proxy WebSocket (`proxy.py`)**: actúa de eslabón invisible atrapando conexiones Web y bajándolas al protocolo TCP.
 
 La finalidad del protocolo es diferenciar claramente entre:
 
@@ -52,10 +52,10 @@ La finalidad del protocolo es diferenciar claramente entre:
 La arquitectura sigue este esquema:
 
 ```text
-1. Núcleo Evaluable:
+1. Sistema Principal (Base TCP):
 Cliente (cliente.py)  <-------TCP------->  Servidor Meteorológico (servidor.py)
 
-2. Ampliación Opcional:
+2. Extensión Web:
 Cliente Web  <----WebSocket---->  Proxy  <----TCP---->  Servidor Meteorológico
 ```
 
@@ -783,7 +783,7 @@ python3 servidor.py
 Salida esperada:
 
 ```text
---- SERVIDOR ACTIVO EN 127.0.0.1:5000 ---
+--- SERVIDOR ACTIVO EN 0.0.0.0:5000 ---
 ```
 
 ## 12.2. Proxy
