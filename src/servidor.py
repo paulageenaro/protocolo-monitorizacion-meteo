@@ -23,17 +23,20 @@ class MeteoServer:
             resp = requests.get(url, timeout=5)
             if resp.status_code == 200:
                 data = resp.json()
-                return { # Extrae solo lo que nos interesa: temp, humedad, presión y viento
+                weather_data = {
                     "temp": data['main']['temp'],
                     "hum": data['main']['humidity'],
                     "pres": data['main']['pressure'],
                     "wind": data['wind']['speed']
                 }
+                return weather_data, None
             else:
-                return None
+                return None, {"status": 404, "msg": "Ciudad no encontrada"}
+        except requests.exceptions.Timeout:
+            return None, {"status": 504, "msg": "Timeout de API externa"}
         except Exception as e:
             print(f"[RED ERROR] Error al conectar con la API: {e}")
-            return None
+            return None, {"status": 500, "msg": "Error de conexión interna"}
 
     def update_loop(self):
         while True:
@@ -43,7 +46,7 @@ class MeteoServer:
                     cities_to_update.update(subs.keys())
             
             for city in cities_to_update:
-                new_data = self.fetch_weather(city) # 2. Llama a fetch_weather para cada una de esas ciudades
+                new_data, err = self.fetch_weather(city) # 2. Llama a fetch_weather para cada una de esas ciudades
                 if new_data:
                     with self.lock:
                         old_data = self.city_states.get(city, {})
@@ -91,7 +94,13 @@ class MeteoServer:
                 
                 messages = data.strip().split('\n')
                 for m in messages:
-                    req = json.loads(m)
+                    if not m.strip(): continue
+                    try:
+                        req = json.loads(m)
+                    except json.JSONDecodeError:
+                        self.send_json(conn, {"status": 400, "msg": "JSON mal formado"})
+                        continue
+                    
                     cmd = req.get("command")
                     city = req.get("city", "Madrid")
 
@@ -107,11 +116,11 @@ class MeteoServer:
 
                     elif cmd == "GET":
                         print(f"[GET] {addr} pide {city}")
-                        fresh_data = self.fetch_weather(city)
+                        fresh_data, err = self.fetch_weather(city)
                         if fresh_data:
                             self.send_json(conn, {"status": 200, "city": city, "data": fresh_data})
                         else:
-                            self.send_json(conn, {"status": 404, "msg": "Ciudad no encontrada"})
+                            self.send_json(conn, err)
 
                     elif cmd == "SUB":
                         vars_req = req.get("variables", ["temp", "hum", "pres", "wind"])
@@ -130,7 +139,7 @@ class MeteoServer:
                         
                         # Si no estaba suscrito, procedemos normalmente
                         print(f"[SUB] {addr} se suscribe a {city}")
-                        initial_data = self.fetch_weather(city)
+                        initial_data, err = self.fetch_weather(city)
                         if initial_data:
                             with self.lock:
                                 self.city_states[city] = initial_data
@@ -140,7 +149,9 @@ class MeteoServer:
                                 }
                             self.send_json(conn, {"status": 200, "msg": f"Suscrito a {city}", "current": initial_data})
                         else:
-                            self.send_json(conn, {"status": 404, "msg": "Ciudad no válida"})    
+                            if err is not None:
+                                err["msg"] = "Ciudad no válida" if err.get("status") == 404 else err.get("msg")
+                            self.send_json(conn, err)    
                     elif cmd == "UNSUB":
                         with self.lock:
                             target_city = req.get("city")
@@ -151,6 +162,9 @@ class MeteoServer:
                                 else:
                                     del self.subscriptions[conn]
                                     self.send_json(conn, {"status": 200, "msg": "Todas las suscripciones canceladas"})
+                                    
+                    else:
+                        self.send_json(conn, {"status": 405, "msg": "Comando no soportado"})
 
         except Exception as e:
             print(f"[CLIENT ERROR] {e}")

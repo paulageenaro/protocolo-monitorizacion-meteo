@@ -4,7 +4,7 @@
 > El **núcleo oficial evaluable** del proyecto corresponde exclusivamente a la comunicación directa TCP entre `cliente.py` y `servidor.py`. 
 > El uso del proxy (`proxy.py`) y la interfaz web (`web/index.html`) se presentan únicamente como una **ampliación opcional** para mejorar la visualización y demostrar la escalabilidad del protocolo.
 
-Este proyecto implementa un protocolo de aplicación meteorológico de arquitectura distribuida, diseñado para **entornos aislados (Máquinas Virtuales)**. Su infraestructura principal consta de un motor base cliente-servidor estandarizado en TCP, que de manera adicional ha sido extendido con una capa web.
+Este proyecto implementa un protocolo de aplicación meteorológico de arquitectura distribuida, diseñado para **entornos aislados (Máquinas Virtuales)**. **El escenario asignado requería TCP**, por lo que su infraestructura principal consta de un motor base cliente-servidor estandarizado en este protocolo, asegurando un canal persistente y ordenado. De manera adicional, ha sido extendido con una capa web.
 
 ---
 
@@ -202,7 +202,7 @@ unsub-resp-ok   = "{" OWS
                   OWS "}"
 
 error-resp      = "{" OWS
-                  q-status OWS ":" OWS (status-400 / status-404 / status-500) OWS "," OWS
+                  q-status OWS ":" OWS (status-400 / status-404 / status-405 / status-500 / status-504) OWS "," OWS
                   q-msg    OWS ":" OWS text
                   OWS "}"
 
@@ -278,7 +278,9 @@ q-wind          = DQUOTE "wind" DQUOTE
 status-200      = "200"
 status-400      = "400"
 status-404      = "404"
+status-405      = "405"
 status-500      = "500"
+status-504      = "504"
 
 ; =========================
 ; TIPOS BÁSICOS
@@ -781,7 +783,7 @@ python3 servidor.py
 Salida esperada:
 
 ```text
---- SERVIDOR ACTIVO EN 0.0.0.0:5000 ---
+--- SERVIDOR ACTIVO EN 127.0.0.1:5000 ---
 ```
 
 ## 12.2. Proxy
