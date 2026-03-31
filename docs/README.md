@@ -1,17 +1,24 @@
-# MeteoApp PRO ☁️ - Sistema de Monitorización Meteorológica
+# Protocolo de Monitorización Meteorológica ☁️
 
-Este proyecto conforma un Asistente Meteorológico de arquitectura distribuida diseñado para **entornos aislados (Máquinas Virtuales)**, compuesto por un motor base TCP estándar (`servidor.py` y `cliente.py`), extendido a través de una App Web interactiva de aspecto premium usando WebSockets.
+> **🛑 NOTA IMPORTANTE PARA DEFENSA Y DEMO:**
+> El **núcleo oficial evaluable** del proyecto corresponde exclusivamente a la comunicación directa TCP entre `cliente.py` y `servidor.py`. 
+> El uso del proxy (`proxy.py`) y la interfaz web (`web/index.html`) se presentan únicamente como una **ampliación opcional** para mejorar la visualización y demostrar la escalabilidad del protocolo.
+
+Este proyecto implementa un protocolo de aplicación meteorológico de arquitectura distribuida, diseñado para **entornos aislados (Máquinas Virtuales)**. Su infraestructura principal consta de un motor base cliente-servidor estandarizado en TCP, que de manera adicional ha sido extendido con una capa web.
 
 ---
 
 ## 🏗️ Arquitectura del Sistema
 
-El proyecto opera con los siguientes componentes principales:
+El sistema se clasifica en dos categorías principales:
 
-1. **`servidor.py` (Backend Meteorológico)**: Obtiene datos del clima en vivo usando OpenWeatherMap. Trabaja en el puerto TCP nativo `5000`. Manténe un estado reactivo y envía notificaciones PUSH al detectar variaciones climáticas en ciudades suscritas.
-2. **`proxy.py` (Puente Web-TCP)**: Actúa como pasarela intermedia bidireccional entre la app web (que corre en un navegador) y el servidor Python. Escucha peticiones WebSocket en el puerto `8080`.
-3. **`web/index.html` (MeteoApp PRO)**: El frontend de cliente gráfico. Diseño *Glassmorphism* usando CSS puro e interactividad asíncrona garantizada con Vanilla Javascript.
-4. **`cliente.py` (Consola Alternativa)**: Cliente legacy de terminal para interactuar manualmente con JSONs puros si se desea evitar la interfaz gráfica.
+### 1. Núcleo Evaluable (Ámbito Oficial)
+1. **`servidor.py` (Backend Meteorológico)**: Obtiene datos del clima en vivo usando OpenWeatherMap. Trabaja en el puerto TCP `5000`. Procesa peticiones y envía notificaciones automáticas ante variaciones climáticas en ciudades suscritas.
+2. **`cliente.py` (Cliente Consola)**: Herramienta oficial para interactuar con el servidor mediante el protocolo JSON nativo por TCP. Presenta una interfaz de terminal pura.
+
+### 2. Ampliación Opcional (Interfaz Gráfica)
+3. **`proxy.py` (Puente Web-TCP)**: Actúa como pasarela intermedia bidireccional entre la app web y el servidor Python. Escucha peticiones WebSocket en el puerto `8080`.
+4. **`web/index.html` (MeteoApp PRO)**: El frontend web de acceso alternativo para usuarios.
 
 # Protocolo de Monitorización Meteorológica con Suscripción y Notificaciones
 
@@ -24,11 +31,14 @@ Este proyecto implementa un **protocolo de aplicación meteorológico** que perm
 - **suscribirse** a cambios en variables meteorológicas,
 - y **cancelar suscripciones** previamente realizadas.
 
-El sistema está compuesto por tres elementos:
+El núcleo del sistema evaluable está compuesto por dos elementos:
 
-- **Cliente web**: interfaz desde la que el usuario realiza las operaciones.
-- **Proxy WebSocket**: recibe mensajes del cliente web y los reenvía al servidor TCP.
-- **Servidor meteorológico**: procesa peticiones, consulta la API externa de OpenWeather y envía respuestas o notificaciones.
+- **Cliente de consola (`cliente.py`)**: ejecuta consultas y maneja la comunicación de forma directa por la terminal.
+- **Servidor meteorológico (`servidor.py`)**: procesa peticiones, consulta la API externa de OpenWeather y envía respuestas o notificaciones.
+
+Para la **ampliación opcional web**, existe un flujo alternativo que añade:
+- **Cliente web**: interfaz visual (HTML/JS) desde la que el usuario despliega las acciones.
+- **Proxy WebSocket (`proxy.py`)**: recibe mensajes del cliente web y los reenvía por TCP estándar al servidor.
 
 La finalidad del protocolo es diferenciar claramente entre:
 
@@ -42,6 +52,10 @@ La finalidad del protocolo es diferenciar claramente entre:
 La arquitectura sigue este esquema:
 
 ```text
+1. Núcleo Evaluable:
+Cliente (cliente.py)  <-------TCP------->  Servidor Meteorológico (servidor.py)
+
+2. Ampliación Opcional:
 Cliente Web  <----WebSocket---->  Proxy  <----TCP---->  Servidor Meteorológico
 ```
 
