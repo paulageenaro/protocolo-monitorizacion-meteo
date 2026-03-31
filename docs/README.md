@@ -1,7 +1,5 @@
 # Protocolo de Monitorización Meteorológica ☁️
 
-# Protocolo de Monitorización Meteorológica ☁️
-
 Este proyecto implementa un protocolo de aplicación meteorológico de arquitectura distribuida, diseñado para **entornos aislados (Máquinas Virtuales)**. Dado que **el escenario asignado requería TCP**, hemos diseñado nuestra infraestructura principal apoyándonos en un motor base cliente-servidor puramente TCP. Esto nos asegura un canal de comunicación persistente y ordenado para todo el sistema. De manera adicional, para mejorar la experiencia, hemos incorporado una extensión gráfica interactiva vía web.
 
 ---
