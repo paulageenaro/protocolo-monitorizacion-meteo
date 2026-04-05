@@ -4,24 +4,6 @@ Este proyecto implementa un protocolo de aplicación meteorológico de arquitect
 
 ---
 
-## 🏗️ Arquitectura del Sistema
-
-Hemos clasificado nuestra arquitectura en dos grandes bloques:
-
-### 1. Sistema Principal (TCP Base)
-Es la implementación fundamental que sostiene el flujo exigido:
-
-1. **`servidor.py` (Backend Meteorológico)**: El motor que obtiene datos del clima en vivo conectándose a OpenWeatherMap. Escucha en el puerto TCP `5000`, procesa consultas y distribuye de vuelta notificaciones a cada cliente suscrito.
-2. **`cliente.py` (Consola de Usuario)**: Nuestra herramienta de terminal desde donde podemos enviar los JSONs crudos por TCP e interactuar de lleno con nuestro protocolo en local.
-
-### 2. Extensión Web (Interfaz Alternativa)
-Para aportar un extra de accesibilidad y valor gráfico, añadimos esta capa que dialoga con el sistema principal:
-
-3. **`proxy.py` (Puente de Comunicación)**: Un pequeño hilo conductor bidireccional que enlaza las conexiones WebSocket provenientes del navegador y las traduce en paquetes limpios hacia nuestro servidor originario TCP. Se despliega en el puerto `8080`.
-4. **`web/index.html` (MeteoApp PRO)**: Panel de visualización con HTML puro (Glassmorphism design) para manipular fácilmente el sistema.
-
-# Protocolo de Monitorización Meteorológica con Suscripción y Notificaciones
-
 ## 1. Descripción general
 
 Este proyecto implementa un **protocolo de aplicación meteorológico** que permite a múltiples clientes:
@@ -48,9 +30,9 @@ La finalidad del protocolo es diferenciar claramente entre:
 
 ---
 
-## 2. Arquitectura del sistema
+## 2. 🏗️ Arquitectura del Sistema
 
-La arquitectura sigue este esquema:
+Hemos clasificado nuestra arquitectura en dos grandes bloques. La arquitectura general sigue este esquema:
 
 ```text
 1. Sistema Principal (Base TCP):
@@ -60,7 +42,19 @@ Cliente (cliente.py)  <-------TCP------->  Servidor Meteorológico (servidor.py)
 Cliente Web  <----WebSocket---->  Proxy  <----TCP---->  Servidor Meteorológico
 ```
 
-### Funcionamiento general
+### 2.1. Sistema Principal (TCP Base)
+Es la implementación fundamental que sostiene el flujo exigido:
+
+1. **`servidor.py` (Backend Meteorológico)**: El motor que obtiene datos del clima en vivo conectándose a OpenWeatherMap. Escucha en el puerto TCP `5000`, procesa consultas y distribuye de vuelta notificaciones a cada cliente suscrito.
+2. **`cliente.py` (Consola de Usuario)**: Nuestra herramienta de terminal desde donde podemos enviar los JSONs crudos por TCP e interactuar de lleno con nuestro protocolo en local.
+
+### 2.2. Extensión Web (Interfaz Alternativa)
+Para aportar un extra de accesibilidad y valor gráfico, añadimos esta capa que dialoga con el sistema principal:
+
+3. **`proxy.py` (Puente de Comunicación)**: Un pequeño hilo conductor bidireccional que enlaza las conexiones WebSocket provenientes del navegador y las traduce en paquetes limpios hacia nuestro servidor originario TCP. Se despliega en el puerto `8080`.
+4. **`web/index.html` (MeteoApp PRO)**: Panel de visualización con HTML puro (Glassmorphism design) para manipular fácilmente el sistema.
+
+### 2.3. Funcionamiento general del protocolo
 
 1. El cliente web envía mensajes en formato **JSON** al proxy mediante **WebSocket**.
 2. El proxy valida que el mensaje sea JSON válido y lo reenvía al servidor mediante **TCP**.
