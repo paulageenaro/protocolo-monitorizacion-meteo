@@ -4,7 +4,7 @@ Esta carpeta contiene el planteamiento de la ampliación voluntaria. El rediseñ
 
 ## 1. Diseño y Estructura
 
-El objetivo ha sido priorizar la simplicidad (la ruta que tomaría un estudiante para adaptar el mismo sistema sin inventar operaciones extrañas) conservando la semántica estricta del ejercicio. 
+El objetivo ha sido priorizar la simplicidad conservando la semántica estricta del ejercicio. 
 
 Se ha definido un documento central, el `meteo.proto` en formato estándar `proto3`. Los comandos textuales desaparecen dando paso a llamadas a métodos remotos formales y estructurados (RPC).
 
