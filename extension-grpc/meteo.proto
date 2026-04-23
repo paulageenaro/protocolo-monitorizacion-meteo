@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+// Especificamos el paquete
+package meteo;
+
+// Opcional: Opciones para generar código Java
+option java_multiple_files = true;
+option java_package = "com.meteo.grpc";
+
+// ----------------------------------------------------
+// SERVICIO PRINCIPAL
+// ----------------------------------------------------
+service MeteoService {
+  // 1. Obtener la lista de ciudades soportadas
+  rpc ListCities (EmptyRequest) returns (CityListResponse);
+
+  // 2. Obtener el clima actual de una ciudad pidiendo explícitamente
+  rpc GetWeather (WeatherRequest) returns (WeatherResponse);
+
+  // 3. Suscribirse a las actualizaciones de clima de una ciudad (Server Streaming)
+  // En gRPC, en lugar de comandos continuos, devuelves un "stream" por donde el 
+  // servidor canalizará asíncronamente todos los cambios hasta que el cliente cierre la conexión.
+  rpc SubscribeWeather (SubscribeRequest) returns (stream WeatherNotification);
+}
+
+// ----------------------------------------------------
+// DEFINICIÓN DE MENSAJES (Estructuras de datos)
+// ----------------------------------------------------
+
+// Mensaje vacío para cuando no es necesario pasar parámetros
+message EmptyRequest {}
+
+// Respuesta para LIST (equivalente a {"type": "RESP_LIST"})
+message CityListResponse {
+  int32 status = 1;
+  string msg = 2;
+  repeated string cities = 3;  // "repeated" es la forma de hacer listas
+}
+
+// Petición general para una ciudad específica
+message WeatherRequest {
+  string city = 1;
+}
+
+// Datos puros de clima
+message WeatherData {
+  float temp = 1;
+  float hum = 2;
+  float pres = 3;
+  float wind = 4;
+}
+
+// Respuesta para GET (equivalente a {"status": 200, "city": "Madrid", "data": {...}})
+message WeatherResponse {
+  int32 status = 1;
+  string message = 2;   // Sirve tanto para avisos como para mensajes de error
+  string city = 3;
+  WeatherData data = 4;
+}
+
+// Petición para iniciar la suscripción
+message SubscribeRequest {
+  string city = 1;
+  repeated string variables = 2; // Lista de variables: ej: ["temp", "wind"]
+}
+
+// Notificación que envía el servidor continuamente
+message WeatherNotification {
+  string city = 1;
+  WeatherData changes = 2; // Información modificada de las variables
+}
